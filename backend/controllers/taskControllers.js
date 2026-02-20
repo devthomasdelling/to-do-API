@@ -1,52 +1,57 @@
-let tasks = [];
-let nextId = 1;
+const Task = require("../models/Tasks");
 
-function list(req, res) {
-  res.json(tasks);
+async function list(req, res) {
+  try {
+    const tasks = await Task.find();
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: error.menssage });
+  }
 }
 
-function create(req, res) {
+async function create(req, res) {
   const { title } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: "nao ha titulo" });
   }
+  try {
+    const task = await Task.create({ title });
 
-  const task = { id: nextId++, title, done: false };
-
-  tasks.push(task);
-  return res.status(201).json(task);
+    return res.status(201).json(task);
+  } catch (error) {
+    res.status(500).json({ error: error.menssage });
+  }
 }
 
-function update(req, res) {
-  const { id } = req.params;
-  const { title, done } = req.body;
+async function update(req, res) {
+  try {
+    const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
 
-  const task = tasks.find((t) => t.id == id);
-  if (!task) {
-    const error = new Error("id nao encontrado");
-    error.status = 404;
-    throw error;
+    if (!task) {
+      return res.status(404).json({ error: "nao encontrada" });
+    }
+
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  if (title !== undefined) task.title = title;
-  if (done !== undefined) task.done = done;
-
-  res.json(task);
 }
 
-function remove(req, res) {
-  const id = Number(req.params.id);
-  
-  const exist = tasks.some((t) => t.id === id)
+async function remove(req, res) {
+  try {
+    const task = await Task.findByIdAndDelete(req.params.id);
 
-  if(!exist) {
-    return res.status(404).json({error: "id nao encontrado"})
+    if (!task) {
+      return res.status(404).json({ error: "nao encontrada" });
+    }
+
+    res.json({ message: "removida" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-  
-  tasks = tasks.filter((t) => t.id !== id);
-  
-  return res.status(204).send();
 }
 
 module.exports = {
