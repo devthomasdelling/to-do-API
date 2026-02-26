@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const router = express.Router();
-const taskControllers = require("../controllers/taskControllers");
+const taskControllers = require("../controllers/task.controller");
 
 router.get("/", taskControllers.list);
 router.post("/", taskControllers.create);
